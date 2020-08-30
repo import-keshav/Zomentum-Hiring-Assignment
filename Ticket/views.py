@@ -46,7 +46,7 @@ class BookTicket(APIView):
                 {'message': 'No Show exist with this ID'},
                 status=status.HTTP_400_BAD_REQUEST)
 
-        if ticket_models.Ticket.objects.filter(show=show).count() > 20:
+        if ticket_models.Ticket.objects.filter(show=show).count() == 20:
             return Response(
                 {'message': 'Seats Booked, No ticket available'},
                 status=status.HTTP_400_BAD_REQUEST)

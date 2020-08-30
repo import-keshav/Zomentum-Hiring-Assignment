@@ -90,3 +90,18 @@ class TicketAppTests(APITestCase):
                 "show":1
             }]
         )
+
+    def test_max_tickets_booking(self):
+        """     Test for Maxm Booking of Show    """
+        response = self.client.post('/movie/create-movie',
+            movie, format='json')
+        response = self.client.post('/movie/create-movie-show',
+            movie_show, format='json')
+
+        for _ in range(21):
+            response = self.client.post('/ticket/book-ticket',
+                user, format='json')
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data, {'message': 'Seats Booked, No ticket available'})
