@@ -21,10 +21,32 @@ class BookTicket(APIView):
                 raise forms.ValidationError("Please include " + key)
 
         data = self.request.data
-        user = self.get_user(data['name'], data['mobile'])
-        show = self.get_show(data['show_id'])
+        user = (user_models.User.objects.filter(
+                mobile=data['mobile']).first())
+        if not user:
+            user_serializer_obj = (
+                user_serializer.UserSerializer(data={
+                    'name':data['name'],
+                    'mobile': data['mobile']
+                }))
+            if user_serializer_obj.is_valid():
+                user_serializer_obj.save()
+                user = (user_models.User.objects.filter(
+                    pk=user_serializer_obj.data['id']).first())
+            else:
+                return Response(
+                    user_serializer_obj.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
 
-        if len(ticket_models.Ticket.objects.filter(show=show)) > 20:
+        show = (
+            movie_models.MovieShow.objects.filter(
+                pk=int(data['show_id'])).first())
+        if not show:
+            return Response(
+                {'message': 'No Show exist with this ID'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        if ticket_models.Ticket.objects.filter(show=show).count() > 20:
             return Response(
                 {'message': 'Seats Booked, No ticket available'},
                 status=status.HTTP_400_BAD_REQUEST)
@@ -34,36 +56,7 @@ class BookTicket(APIView):
         return Response({
             'message': 'Ticket Booked Succesfully',
             'ticket_id': ticket.id
-        })
-
-
-    def get_user(self, name, mobile):
-        """     Get or Create User object   """
-        user = (
-            user_models.User.objects.filter(
-                mobile=mobile).first())
-        if not user:
-            user_serializer_obj = (
-                user_serializer.UserSerializer(data={
-                    'name':name,
-                    'mobile': mobile
-                }))
-            if user_serializer_obj.is_valid():
-                user_serializer_obj.save()
-                user = user_models.User.objects.filter(
-                    pk=user_serializer_obj['id']).first()
-                return user
-            return forms.ValidationError(
-                user_serializer_obj.errors)
-        return user
-
-
-    def get_show(self, show_id):
-        """     Return Show object  """
-        show = movie_models.MovieShow.objects.filter(pk=int(show_id)).first()
-        if not show:
-            return forms.ValidationError('No Show exist with this ID')
-        return show
+        }, status=status.HTTP_201_CREATED)
 
 
 class DeleteTicket(generics.DestroyAPIView):
