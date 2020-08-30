@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Movie',
     'Ticket',
-    'User'
+    'User',
+    'django_cron'
 ]
 
 MIDDLEWARE = [
@@ -102,6 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CRON_CLASSES = [
+    'Ticket.cron.DeleteExpiredTicketsJob'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
